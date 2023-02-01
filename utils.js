@@ -13,24 +13,33 @@ export const normalizar = (palabra) => {
 }
 
 /**
- * Funcion para obtener los sinonimos de una palabra
- * @param {string} palabra Palabra sobre la cual se buscan los sinonimos
- * @return {string[]} Arreglo con sinonimos de la palabra
+ * Funcion para obtener los sinonimos y antonimos de una palabra
+ * @param {string} palabra Palabra sobre la cual se buscan los sinonimos y antonimos
  */
-export const obtenerSinonimos = async (palabra) => {
+export const obtenerListados = async (palabra) => {
   const response = await fetch(`https://www.wordreference.com/sinonimos/${palabra}`);
   const body = await response.text();
   const $ = load(body);
 
-  // Guardar sinonimos en arreglo
-  const sinonimos = [];
-  $('div.clickable').find('li').each((i, el) => {
+  // Guardar resultados en arreglos
+  const sinonimos = [], antonimos = [];
+  $('div.clickable').find('li').each((_, el) => {
     const elemHtml = $(el).html();
-    if (!elemHtml.startsWith('<span')) {
+
+    // Los antonimos se encuentran en etiquetas <span>
+    if (elemHtml.startsWith('<span')) {
+      elemHtml.substring(27).replace('</span>', '').split(', ').forEach(
+        (antonimo) => antonimos.push(antonimo.trim())
+      );
+    }
+    else {
       elemHtml.split(', ').forEach(
         (sinonimo) => sinonimos.push(sinonimo.trim())
       );
     }
   });
-  return sinonimos;
+
+  return {
+    sinonimos, antonimos
+  };
 }
